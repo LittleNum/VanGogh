@@ -4,6 +4,8 @@ import com.hero.littlenum.vangogh.data.Level
 
 
 interface IViewAction {
+    fun upload()
+
     fun selectNewLevel(level: Level)
 
     fun selectNewTag(tag: String)
@@ -20,7 +22,15 @@ interface IViewAction {
 
     fun getCurrentTag(): String?
 
-    fun showPrefix(): Boolean
+    fun getKeyWords(): List<String>
 
     fun getKeyWord(): String?
+
+    fun showPrefix(): Boolean
+
+    fun togglePrefix()
+
+    fun toggleResume()
+
+    fun isResume(): Boolean
 }

@@ -3,4 +3,7 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
+    <color name="log_bg">#ffab91</color>
+    <color name="control_bg">#d84315</color>
+    <color name="stoke_bg">#fbe9e7</color>
 </resources>

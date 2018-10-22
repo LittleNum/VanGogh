@@ -3,7 +3,7 @@ package com.hero.littlenum.vangogh.data
 interface ILogData {
     fun clearLog()
 
-    fun addNewLog(log: String?): Log
+    fun addNewLog(log: String): Log?
 
     fun getAllLog(): List<Log>
 
@@ -25,7 +25,15 @@ interface ILogData {
 
     fun getCurrentTag(): String?
 
+    fun getKeyWords(): List<String>
+
     fun getKeyWord(): String?
 
     fun isShowPrefix(): Boolean
+
+    fun isResume(): Boolean
+
+    fun togglePrefix()
+
+    fun toggleResume()
 }

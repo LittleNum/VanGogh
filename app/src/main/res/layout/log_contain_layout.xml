@@ -1,34 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.hero.littlenum.vangogh.view.LogWindow xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimary">
+    android:background="@color/log_bg"
+    android:focusable="false">
 
     <HorizontalScrollView
         android:id="@+id/tab_scrollview"
         android:layout_width="match_parent"
-        android:layout_height="50dp">
+        android:layout_height="@dimen/control_bar_height"
+        android:background="@color/control_bg"
+        android:scrollbars="none">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal">
+        <include
+            android:id="@+id/control_bar"
+            layout="@layout/log_controll_bar_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
 
-            <TextView
-                android:id="@+id/level"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Verbose"/>
-
-            <EditText
-                android:id="@+id/tag"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-        </LinearLayout>
     </HorizontalScrollView>
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/log_list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/tab_scrollview" />
 </com.hero.littlenum.vangogh.view.LogWindow>

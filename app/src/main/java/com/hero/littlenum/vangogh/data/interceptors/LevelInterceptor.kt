@@ -1,4 +1,7 @@
-package com.hero.littlenum.vangogh.data
+package com.hero.littlenum.vangogh.data.interceptors
+
+import com.hero.littlenum.vangogh.data.Level
+import com.hero.littlenum.vangogh.data.Log
 
 class LevelInterceptor : LogInterceptor {
     var level: Level = Level.V

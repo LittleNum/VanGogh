@@ -11,6 +11,7 @@ const val EXEC_LOG_TIME: String = "logcat -v time"
 
 class LogcatTask : AsyncTask<OnLogListener, String, Unit>() {
     var listener: OnLogListener? = null
+    lateinit var process: Process
 
     override fun onPreExecute() {
         listener?.onPreExecute()
@@ -20,9 +21,9 @@ class LogcatTask : AsyncTask<OnLogListener, String, Unit>() {
         listener = p0[0]
         try {
             Runtime.getRuntime().exec(EXEC_LOG)
-            val process = Runtime.getRuntime().exec(EXEC_LOG_TIME)
-            val `is` = process.inputStream
-            val reader = InputStreamReader(`is`!!)
+            process = Runtime.getRuntime().exec(EXEC_LOG_TIME)
+            val stream = process.inputStream
+            val reader = InputStreamReader(stream!!)
             val bufferedReader = BufferedReader(reader)
 
             bufferedReader.forEachLine {
@@ -30,17 +31,24 @@ class LogcatTask : AsyncTask<OnLogListener, String, Unit>() {
             }
             bufferedReader.close()
             reader.close()
-            `is`.close()
+            stream.close()
         } catch (e: IOException) {
             e.printStackTrace()
         }
     }
 
     override fun onProgressUpdate(vararg values: String?) {
-        listener?.onLogUpdate(values.first())
+        values.first()?.let {
+            listener?.onLogUpdate(it)
+        }
     }
+
 
     override fun onPostExecute(result: Unit?) {
         listener?.onPostExecute()
+    }
+
+    fun close() {
+        process.destroy()
     }
 }

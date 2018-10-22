@@ -1,5 +1,7 @@
 package com.hero.littlenum.vangogh.data
 
+import android.graphics.Color
+
 const val VERBOSE: String = "Verbose"
 const val DEBUG: String = "Debug"
 const val INFO: String = "Info"
@@ -12,9 +14,11 @@ interface Signal {
     fun signal(): String
 
     fun level(): Int
+
+    fun color(): Int = Color.WHITE
 }
 
-enum class Level(name: String) : Signal {
+enum class Level(val text: String) : Signal {
     V(VERBOSE) {
         override fun signal(): String {
             return " V/"
@@ -35,6 +39,8 @@ enum class Level(name: String) : Signal {
         }
 
         override fun level(): Int = 2
+
+        override fun color(): Int = Color.WHITE
     },
     W(WARN) {
         override fun signal(): String {
@@ -49,6 +55,8 @@ enum class Level(name: String) : Signal {
         }
 
         override fun level(): Int = 4
+
+        override fun color(): Int = Color.RED
     },
     SE(SYSERR) {
         override fun signal(): String {
@@ -64,6 +72,8 @@ enum class Level(name: String) : Signal {
 
         override fun level(): Int = 0
     };
+
+    override fun toString(): String = text
 
     companion object {
         fun getLevel(name: String): Level {

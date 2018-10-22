@@ -24,24 +24,30 @@ class VanGoghPresent(val view: ILogContract.ILogWindowView, val data: ILogData =
         data.saveLogToLocal()
     }
 
-    override fun uploadLogs() {
+    override fun handleUncaughtException() {
         data.uploadLogs()
     }
 
-    override fun handleUncaughtException() {
-        data.uploadLogs()
+    override fun close() {
+        task.close()
     }
 
     override fun onPreExecute() {
         view.clearLog()
     }
 
-    override fun onLogUpdate(log: String?) {
-        view.updateLogList(data.addNewLog(log))
+    override fun onLogUpdate(log: String) {
+        data.addNewLog(log)?.let {
+            view.updateLogList(it)
+        }
     }
 
     override fun onPostExecute() {
 
+    }
+
+    override fun upload() {
+        data.uploadLogs()
     }
 
     override fun selectNewLevel(level: Level) {
@@ -67,7 +73,20 @@ class VanGoghPresent(val view: ILogContract.ILogWindowView, val data: ILogData =
 
     override fun getCurrentTag(): String? = data.getCurrentTag()
 
-    override fun showPrefix(): Boolean = data.isShowPrefix()
+    override fun getKeyWords(): List<String> = data.getKeyWords()
 
     override fun getKeyWord(): String? = data.getKeyWord()
+
+    override fun showPrefix(): Boolean = data.isShowPrefix()
+
+    override fun togglePrefix() {
+        data.togglePrefix()
+        view.notifyView()
+    }
+
+    override fun toggleResume() {
+        data.toggleResume()
+    }
+
+    override fun isResume(): Boolean = data.isResume()
 }

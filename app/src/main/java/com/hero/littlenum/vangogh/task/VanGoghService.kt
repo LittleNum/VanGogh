@@ -6,11 +6,13 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.PixelFormat
+import android.os.Build
 import android.os.IBinder
 import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.WindowManager
+import android.view.WindowManager.LayoutParams.*
 import com.hero.littlenum.vangogh.R
 import com.hero.littlenum.vangogh.present.ILogContract
 import com.hero.littlenum.vangogh.present.VanGoghPresent
@@ -57,17 +59,17 @@ class VanGoghService : Service() {
             inited = true
             mWindowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
             displayMetrics = DisplayMetrics()
-            mWindowManager!!.defaultDisplay.getMetrics(displayMetrics)
+            mWindowManager.defaultDisplay.getMetrics(displayMetrics)
             mWMLayoutParams = WindowManager.LayoutParams()
-            mWMLayoutParams!!.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            mWMLayoutParams!!.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-            mWMLayoutParams!!.format = PixelFormat.TRANSLUCENT
-            mWMLayoutParams!!.gravity = Gravity.START or Gravity.TOP
-            mWMLayoutParams!!.x = 0
-            mWMLayoutParams!!.y = 0
-            mWMLayoutParams!!.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-            mWMLayoutParams!!.width = WindowManager.LayoutParams.MATCH_PARENT
-            mWMLayoutParams!!.height = 1000
+            mWMLayoutParams.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            mWMLayoutParams.type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) TYPE_APPLICATION_OVERLAY else TYPE_SYSTEM_ALERT
+            mWMLayoutParams.format = PixelFormat.TRANSLUCENT
+            mWMLayoutParams.gravity = Gravity.START or Gravity.TOP
+            mWMLayoutParams.x = 0
+            mWMLayoutParams.y = 100
+            mWMLayoutParams.flags = FLAG_NOT_TOUCH_MODAL or FLAG_NOT_FOCUSABLE
+            mWMLayoutParams.width = WindowManager.LayoutParams.MATCH_PARENT
+            mWMLayoutParams.height = 1000
         }
     }
 
@@ -84,6 +86,7 @@ class VanGoghService : Service() {
     private fun removeWindow() {
         try {
             mWindowManager.removeView(wView)
+            vgPresent.close()
         } catch (e: Exception) {
             e.printStackTrace()
         }

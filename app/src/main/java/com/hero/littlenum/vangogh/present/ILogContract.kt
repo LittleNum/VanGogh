@@ -1,6 +1,5 @@
 package com.hero.littlenum.vangogh.present
 
-import com.hero.littlenum.vangogh.data.Level
 import com.hero.littlenum.vangogh.data.Log
 
 interface ILogContract {
@@ -11,13 +10,15 @@ interface ILogContract {
 
         fun saveLogToLocal()
 
-        fun uploadLogs()
-
         fun handleUncaughtException()
+
+        fun close()
     }
 
     interface ILogWindowView {
         fun clearLog()
+
+        fun notifyView()
 
         fun showAllLogs(logs: List<Log>)
 
