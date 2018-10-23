@@ -9,7 +9,7 @@ interface ILogData {
 
     fun saveLogToLocal()
 
-    fun uploadLogs()
+    fun uploadLogs(name: String)
 
     fun filterLogByLevel(level: Level)
 

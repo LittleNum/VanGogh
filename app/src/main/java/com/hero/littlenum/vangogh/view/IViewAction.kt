@@ -4,7 +4,7 @@ import com.hero.littlenum.vangogh.data.Level
 
 
 interface IViewAction {
-    fun upload()
+    fun upload(name: String)
 
     fun selectNewLevel(level: Level)
 

@@ -6,4 +6,5 @@
     <string name="edit_kw_title">设置关键字</string>
     <string name="ensure">确定</string>
     <string name="cancel">取消</string>
+    <string name="permission_request">请打开悬浮窗权限</string>
 </resources>

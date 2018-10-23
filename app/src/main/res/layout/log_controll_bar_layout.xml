@@ -9,8 +9,16 @@
         android:layout_width="@dimen/control_level_width"
         android:layout_height="match_parent"
         android:layout_marginLeft="@dimen/control_margin"
+        android:layout_marginTop="@dimen/inner_padding"
         android:layout_marginRight="@dimen/control_margin"
-        android:gravity="center_vertical" />
+        android:layout_marginBottom="@dimen/inner_padding"
+        android:paddingLeft="@dimen/inner_padding"
+        android:paddingRight="@dimen/inner_padding"
+        android:background="@drawable/level_name_background"
+        android:ellipsize="end"
+        android:gravity="center_vertical"
+        android:lines="1"
+        android:textColor="@android:color/black" />
 
     <RelativeLayout
         android:id="@+id/level_select"
@@ -179,5 +187,14 @@
         android:paddingRight="@dimen/control_margin"
         android:scaleType="center"
         android:src="@drawable/log_toggle_prefix" />
+
+    <ImageView
+        android:id="@+id/close"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingLeft="@dimen/control_margin"
+        android:paddingRight="@dimen/control_margin"
+        android:scaleType="center"
+        android:src="@drawable/log_close" />
 
 </com.hero.littlenum.vangogh.view.ControlBar>

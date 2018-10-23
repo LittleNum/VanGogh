@@ -1,5 +1,6 @@
 package com.hero.littlenum.vangogh.present
 
+import android.os.AsyncTask
 import com.hero.littlenum.vangogh.data.ILogData
 import com.hero.littlenum.vangogh.data.Level
 import com.hero.littlenum.vangogh.data.LogDataStore
@@ -12,7 +13,14 @@ class VanGoghPresent(val view: ILogContract.ILogWindowView, val data: ILogData =
     val task = LogcatTask()
 
     override fun startShowLog() {
+        if (task.status == AsyncTask.Status.RUNNING) {
+            return
+        }
         task.execute(this)
+    }
+
+    override fun stopTask() {
+        task.close()
     }
 
     override fun clearLog() {
@@ -25,7 +33,7 @@ class VanGoghPresent(val view: ILogContract.ILogWindowView, val data: ILogData =
     }
 
     override fun handleUncaughtException() {
-        data.uploadLogs()
+        data.uploadLogs(view.getLogName())
     }
 
     override fun close() {
@@ -46,8 +54,8 @@ class VanGoghPresent(val view: ILogContract.ILogWindowView, val data: ILogData =
 
     }
 
-    override fun upload() {
-        data.uploadLogs()
+    override fun upload(name: String) {
+        data.uploadLogs(name)
     }
 
     override fun selectNewLevel(level: Level) {

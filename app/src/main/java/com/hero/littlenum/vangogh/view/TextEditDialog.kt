@@ -9,8 +9,8 @@ import android.view.WindowManager
 import android.widget.EditText
 import com.hero.littlenum.vangogh.R
 
+class TextEditDialog(activity: Activity, val title: String, private val listener: (String?) -> Unit?) {
 
-class TextEditDialog(activity: Activity, val title: String, private val listener: TextEditListener) {
     private var dialog: Dialog = AlertDialog.Builder(activity)
             .setTitle(title)
             .setCancelable(true)
@@ -34,25 +34,20 @@ class TextEditDialog(activity: Activity, val title: String, private val listener
 
     private fun clickPositive() {
         val text = dialog.findViewById<EditText?>(R.id.edit)?.text?.toString()
-        listener.onEdit(text)
+        listener(text)
     }
 
     companion object {
-        fun showEditDialog(activity: Activity, title: String, listener: TextEditListener): TextEditDialog {
+        fun showEditDialog(activity: Activity, title: String, listener: (String?) -> Unit?): TextEditDialog {
             val dialog = TextEditDialog(activity, title, listener)
             dialog.show()
             return dialog
         }
 
-        fun showEditDialog(activity: Activity, title: Int, listener: TextEditListener): TextEditDialog {
+        fun showEditDialog(activity: Activity, title: Int, listener: (String?) -> Unit?): TextEditDialog {
             val dialog = TextEditDialog(activity, activity.getString(title), listener)
             dialog.show()
             return dialog
         }
-    }
-
-
-    interface TextEditListener {
-        fun onEdit(text: String?)
     }
 }

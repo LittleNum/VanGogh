@@ -10,6 +10,7 @@ import com.hero.littlenum.vangogh.R
 import com.hero.littlenum.vangogh.data.Level
 
 class ControlBar : LinearLayout, View.OnClickListener {
+    val name = Build.BRAND + "-" + Integer.toHexString(hashCode())
     private lateinit var logName: TextView
     private lateinit var level: Spinner
     private lateinit var levelText: TextView
@@ -27,6 +28,7 @@ class ControlBar : LinearLayout, View.OnClickListener {
     private lateinit var orientation: ImageView
     private lateinit var togglePrefix: ImageView
     private lateinit var resume: ImageView
+    private lateinit var close: ImageView
     private lateinit var tagDialog: TextEditDialog
     private lateinit var kwDialog: TextEditDialog
 
@@ -34,24 +36,20 @@ class ControlBar : LinearLayout, View.OnClickListener {
     private var tagAdapter = ArrayAdapter<String>(context, R.layout.level_spinner_item)
     private var kwAdapter = ArrayAdapter<String>(context, R.layout.level_spinner_item)
 
-    private val tagEdit = object : TextEditDialog.TextEditListener {
-        override fun onEdit(text: String?) {
-            text?.let {
-                listener?.selectNewTag(it)
-                tagAdapter.clear()
-                tagAdapter.addAll(listener?.getTags() ?: mutableListOf<String>())
-                tag.text = it
-            }
+    private val tagEdit = { text: String? ->
+        text?.let {
+            listener?.selectNewTag(it)
+            tagAdapter.clear()
+            tagAdapter.addAll(listener?.getTags() ?: mutableListOf<String>())
+            tag.text = it
         }
     }
-    private val kwEdit = object : TextEditDialog.TextEditListener {
-        override fun onEdit(text: String?) {
-            text?.let {
-                listener?.selectKeyWord(it)
-                kwAdapter.clear()
-                kwAdapter.addAll(listener?.getKeyWords() ?: mutableListOf<String>())
-                keyword.text = it
-            }
+    private val kwEdit = { text: String? ->
+        text?.let {
+            listener?.selectKeyWord(it)
+            kwAdapter.clear()
+            kwAdapter.addAll(listener?.getKeyWords() ?: mutableListOf<String>())
+            keyword.text = it
         }
     }
 
@@ -62,6 +60,8 @@ class ControlBar : LinearLayout, View.OnClickListener {
             adapter.addAll(value?.getLevel() ?: mutableListOf<Level>())
             tagAdapter.addAll(value?.getTags() ?: mutableListOf<String>())
         }
+
+    var windowAction: WindowAction? = null
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attributes: AttributeSet) : super(context, attributes)
@@ -86,6 +86,7 @@ class ControlBar : LinearLayout, View.OnClickListener {
         orientation = findViewById(R.id.orientation)
         togglePrefix = findViewById(R.id.prefix)
         resume = findViewById(R.id.resume)
+        close = findViewById(R.id.close)
         level.adapter = adapter
         tagSpinner.adapter = tagAdapter
         kwSpinner.adapter = kwAdapter
@@ -94,6 +95,7 @@ class ControlBar : LinearLayout, View.OnClickListener {
     }
 
     private fun initListener() {
+        logName.text = name
         clear.setOnClickListener(this)
         levelSelect.setOnClickListener(this)
         tagHistory.setOnClickListener(this)
@@ -106,6 +108,7 @@ class ControlBar : LinearLayout, View.OnClickListener {
         orientation.setOnClickListener(this)
         togglePrefix.setOnClickListener(this)
         resume.setOnClickListener(this)
+        close.setOnClickListener(this)
         level.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(parent: AdapterView<*>?) {
             }
@@ -184,8 +187,8 @@ class ControlBar : LinearLayout, View.OnClickListener {
             R.id.clear -> listener?.clearLogByControl()
             R.id.top -> listener?.scrollToTop()
             R.id.bottom -> listener?.scrollToBottom()
-            R.id.upload -> listener?.upload()
-            R.id.orientation -> listener?.toggleOrientation()
+            R.id.upload -> listener?.upload(name)
+            R.id.orientation -> windowAction?.toggleOrientation()
             R.id.prefix -> {
                 listener?.togglePrefix()
             }
@@ -193,6 +196,9 @@ class ControlBar : LinearLayout, View.OnClickListener {
                 listener?.toggleResume()
                 val show = listener?.isResume() ?: false
                 resume.setImageResource(if (show) R.drawable.log_resume_new else R.drawable.log_stop_new)
+            }
+            R.id.close -> {
+                windowAction?.closeWindow()
             }
         }
     }
@@ -207,12 +213,16 @@ class ControlBar : LinearLayout, View.OnClickListener {
         fun clearLogByControl()
         fun scrollToTop()
         fun scrollToBottom()
-        fun upload()
+        fun upload(name: String)
         fun showPrefix(): Boolean
         fun orientation(): Int
         fun isResume(): Boolean
-        fun toggleOrientation()
         fun togglePrefix()
         fun toggleResume()
+    }
+
+    interface WindowAction {
+        fun toggleOrientation()
+        fun closeWindow()
     }
 }

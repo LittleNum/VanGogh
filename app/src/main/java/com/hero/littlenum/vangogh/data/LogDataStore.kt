@@ -1,8 +1,12 @@
 package com.hero.littlenum.vangogh.data
 
 import com.hero.littlenum.vangogh.data.interceptors.*
+import okhttp3.*
+import java.io.IOException
+import java.lang.StringBuilder
 
 class LogDataStore : ILogData {
+    var originLogs = StringBuilder()
     val allLogs = mutableListOf<Log>()
     val filterLogs = mutableListOf<Log>()
 
@@ -20,6 +24,7 @@ class LogDataStore : ILogData {
             resumeInterceptor)
 
     override fun clearLog() {
+        originLogs = StringBuilder()
         allLogs.clear()
         filterLogs.clear()
     }
@@ -27,6 +32,7 @@ class LogDataStore : ILogData {
     override fun addNewLog(log: String): Log? {
         val t = Log(log)
         allLogs.add(t)
+        originLogs.append(log).append("\r")
         return intercept(t)
     }
 
@@ -35,7 +41,22 @@ class LogDataStore : ILogData {
     override fun saveLogToLocal() {
     }
 
-    override fun uploadLogs() {
+    override fun uploadLogs(name: String) {
+        val client = OkHttpClient()
+        val post = FormBody.Builder().add("name", name)
+                .add("log", originLogs.toString())
+                .build()
+        val request = Request.Builder().post(post).url("http://10.10.26.16:8000/vangogh/uploadlog/").build()
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                e.printStackTrace()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                print(response)
+            }
+        })
+
     }
 
     override fun filterLogByLevel(level: Level) {

@@ -6,13 +6,11 @@ import android.graphics.Color
 import android.graphics.Rect
 import android.support.constraint.ConstraintLayout
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.LinearSmoothScroller
 import android.support.v7.widget.RecyclerView
 import android.text.SpannableString
 import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
-import android.util.DisplayMetrics
 import android.view.View
 import android.view.ViewGroup
 import android.widget.HorizontalScrollView
@@ -67,8 +65,11 @@ class LogWindow : ConstraintLayout, ILogContract.ILogWindowView, ControlBar.Cont
         })
     }
 
-    override fun getLevel(): List<Level> = viewAction?.getLevels() ?: mutableListOf()
+    fun setControlOrientation(orientation: ControlBar.WindowAction) {
+        controlBar.windowAction = orientation
+    }
 
+    override fun getLevel(): List<Level> = viewAction?.getLevels() ?: mutableListOf()
 
     override fun selectNewLevel(level: Level) {
         viewAction?.selectNewLevel(level)
@@ -90,8 +91,8 @@ class LogWindow : ConstraintLayout, ILogContract.ILogWindowView, ControlBar.Cont
         viewAction?.clearLog()
     }
 
-    override fun upload() {
-        viewAction?.upload()
+    override fun upload(name: String) {
+        viewAction?.upload(name)
     }
 
     override fun showPrefix(): Boolean = viewAction?.showPrefix() ?: true
@@ -99,10 +100,6 @@ class LogWindow : ConstraintLayout, ILogContract.ILogWindowView, ControlBar.Cont
     override fun orientation(): Int = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
     override fun isResume(): Boolean = viewAction?.isResume() ?: true
-
-    override fun toggleOrientation() {
-
-    }
 
     override fun togglePrefix() {
         viewAction?.togglePrefix()
@@ -147,6 +144,8 @@ class LogWindow : ConstraintLayout, ILogContract.ILogWindowView, ControlBar.Cont
         scrollToBottom = true
         logListRv.scrollToPosition(adapter.itemCount - 1)
     }
+
+    override fun getLogName(): String = controlBar.name
 
     inner class LogAdapter : RecyclerView.Adapter<VH>() {
         override fun getItemCount(): Int = logList.size

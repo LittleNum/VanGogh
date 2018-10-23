@@ -29,6 +29,7 @@ class LogcatTask : AsyncTask<OnLogListener, String, Unit>() {
             bufferedReader.forEachLine {
                 publishProgress(it)
             }
+
             bufferedReader.close()
             reader.close()
             stream.close()
@@ -49,6 +50,9 @@ class LogcatTask : AsyncTask<OnLogListener, String, Unit>() {
     }
 
     fun close() {
-        process.destroy()
+        if (::process.isInitialized) {
+            process.destroy()
+        }
+        cancel(true)
     }
 }

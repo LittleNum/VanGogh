@@ -6,6 +6,8 @@ interface ILogContract {
     interface ILogPresent {
         fun startShowLog()
 
+        fun stopTask()
+
         fun clearLog()
 
         fun saveLogToLocal()
@@ -27,5 +29,7 @@ interface ILogContract {
         fun scrollToTop()
 
         fun scrollToBottom()
+
+        fun getLogName(): String
     }
 }
