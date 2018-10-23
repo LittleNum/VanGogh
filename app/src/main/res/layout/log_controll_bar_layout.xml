@@ -12,12 +12,12 @@
         android:layout_marginTop="@dimen/inner_padding"
         android:layout_marginRight="@dimen/control_margin"
         android:layout_marginBottom="@dimen/inner_padding"
-        android:paddingLeft="@dimen/inner_padding"
-        android:paddingRight="@dimen/inner_padding"
         android:background="@drawable/level_name_background"
         android:ellipsize="end"
         android:gravity="center_vertical"
         android:lines="1"
+        android:paddingLeft="@dimen/inner_padding"
+        android:paddingRight="@dimen/inner_padding"
         android:textColor="@android:color/black" />
 
     <RelativeLayout

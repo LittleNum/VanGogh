@@ -22,6 +22,11 @@ import com.hero.littlenum.vangogh.view.ControlBar
 import com.hero.littlenum.vangogh.view.IViewAction
 import com.hero.littlenum.vangogh.view.LogWindow
 
+const val RATIO = 3f / 4
+const val ORIGIN_X = 0
+const val ORIGIN_Y = 0
+const val CHECK_SLEEP = 5000L
+
 class VanGoghService : Service() {
     private lateinit var wView: LogWindow
     private lateinit var mWindowManager: WindowManager
@@ -32,11 +37,25 @@ class VanGoghService : Service() {
 
     private var added = false
 
+    private val originPosition = Origin()
+
+    private var checkMetrics = true
+
     override fun onCreate() {
         super.onCreate()
         initWindow()
         initParams()
         vgPresent.startShowLog()
+        Thread {
+            while (checkMetrics) {
+                try {
+                    Thread.sleep(CHECK_SLEEP)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                mWindowManager.defaultDisplay.getMetrics(displayMetrics)
+            }
+        }.start()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -59,6 +78,7 @@ class VanGoghService : Service() {
         super.onDestroy()
         removeWindow()
         request = null
+        checkMetrics = false
     }
 
     private fun initWindow() {
@@ -70,11 +90,13 @@ class VanGoghService : Service() {
         mWMLayoutParams.type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) TYPE_APPLICATION_OVERLAY else TYPE_SYSTEM_ALERT
         mWMLayoutParams.format = PixelFormat.TRANSLUCENT
         mWMLayoutParams.gravity = Gravity.START or Gravity.TOP
-        mWMLayoutParams.x = 0
-        mWMLayoutParams.y = 100
+        mWMLayoutParams.x = ORIGIN_X
+        mWMLayoutParams.y = ORIGIN_Y
         mWMLayoutParams.flags = FLAG_NOT_TOUCH_MODAL or FLAG_NOT_FOCUSABLE
-        mWMLayoutParams.width = WindowManager.LayoutParams.MATCH_PARENT
-        mWMLayoutParams.height = 1000
+        val portrait = displayMetrics.widthPixels < displayMetrics.heightPixels
+        mWMLayoutParams.width = if (portrait) displayMetrics.widthPixels else displayMetrics.widthPixels / 2
+        mWMLayoutParams.height = if (portrait) (displayMetrics.widthPixels * RATIO).toInt()
+        else (displayMetrics.heightPixels * RATIO).toInt()
     }
 
     private fun initParams() {
@@ -83,7 +105,6 @@ class VanGoghService : Service() {
         wView.viewAction = vgPresent as IViewAction
         wView.setControlOrientation(object : ControlBar.WindowAction {
             override fun toggleOrientation() {
-
                 val ori = mWMLayoutParams.screenOrientation
                 if (ori == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
                     mWMLayoutParams.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -97,6 +118,39 @@ class VanGoghService : Service() {
                 removeWindow()
             }
         })
+        wView.adjustView = object : LogWindow.AdjustView {
+
+            override fun onZoomStart() {
+            }
+
+            override fun onZoomUpdate(dx: Float, dy: Float) {
+                val w = displayMetrics.widthPixels
+                val h = displayMetrics.heightPixels
+                val size = Math.min(w, h)
+                val cw = if (mWMLayoutParams.width <= 0) w else mWMLayoutParams.width
+                val ch = if (mWMLayoutParams.height <= 0) h else mWMLayoutParams.height
+                mWMLayoutParams.width = Math.min(Math.max(cw + dx.toInt(), size / 2), w)
+                mWMLayoutParams.height = Math.min(Math.max(ch + dy, size / 2 * RATIO).toInt(), h)
+                mWindowManager.updateViewLayout(wView, mWMLayoutParams)
+            }
+
+            override fun onZoomEnd() {
+            }
+
+            override fun onMoveStart() {
+                originPosition.p = mWMLayoutParams.x
+                originPosition.q = mWMLayoutParams.y
+            }
+
+            override fun onMoveUpdate(dx: Float, dy: Float) {
+                mWMLayoutParams.x = Math.min(Math.max(0, originPosition.p + dx.toInt()), displayMetrics.widthPixels - mWMLayoutParams.width)
+                mWMLayoutParams.y = Math.min(Math.max(0, originPosition.q + dy.toInt()), displayMetrics.heightPixels - mWMLayoutParams.height)
+                mWindowManager.updateViewLayout(wView, mWMLayoutParams)
+            }
+
+            override fun onMoveEnd() {
+            }
+        }
     }
 
     val addView = { orientation: Int? ->
@@ -126,9 +180,9 @@ class VanGoghService : Service() {
 
     private fun removeWindow() {
         try {
-            mWindowManager.removeView(wView)
             added = false
             vgPresent.close()
+            mWindowManager.removeView(wView)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -182,4 +236,6 @@ class VanGoghService : Service() {
             request?.requestSpecial(permission, callback)
         }
     }
+
+    data class Origin(var p: Int = 0, var q: Int = 0)
 }

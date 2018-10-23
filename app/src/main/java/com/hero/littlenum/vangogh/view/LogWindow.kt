@@ -11,9 +11,11 @@ import android.text.SpannableString
 import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.HorizontalScrollView
+import android.widget.ImageView
 import android.widget.TextView
 import com.hero.littlenum.vangogh.R
 import com.hero.littlenum.vangogh.data.Level
@@ -26,12 +28,18 @@ class LogWindow : ConstraintLayout, ILogContract.ILogWindowView, ControlBar.Cont
             field = value
             controlBar.listener = this
         }
+    var adjustView: AdjustView? = null
     private var logList = mutableListOf<Log>()
     private lateinit var controlBar: ControlBar
     private lateinit var logListRv: RecyclerView
     private lateinit var tabScrollView: HorizontalScrollView
+    private lateinit var zoom: ImageView
+    private lateinit var positionAdjust: ImageView
     private var adapter = LogAdapter()
     private var scrollToBottom = true
+
+    private val drag = Drag()
+    private val position = Drag()
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
@@ -43,6 +51,8 @@ class LogWindow : ConstraintLayout, ILogContract.ILogWindowView, ControlBar.Cont
         controlBar = findViewById(R.id.control_bar)
         logListRv = findViewById(R.id.log_list)
         tabScrollView = findViewById(R.id.tab_scrollview)
+        zoom = findViewById(R.id.zoom)
+        positionAdjust = findViewById(R.id.position_adjust)
         logListRv.layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
         logListRv.adapter = adapter
         logListRv.addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -63,6 +73,66 @@ class LogWindow : ConstraintLayout, ILogContract.ILogWindowView, ControlBar.Cont
                 outRect?.bottom = 5
             }
         })
+        zoom.setOnTouchListener { _, event: MotionEvent? -> zoomOnTouchEvent(event) }
+        positionAdjust.setOnTouchListener { _, event: MotionEvent? -> adjustPosition(event) }
+    }
+
+    private fun adjustPosition(event: MotionEvent?): Boolean {
+        val x = event?.rawX ?: 0f
+        val y = event?.rawY ?: 0f
+        when (event?.action) {
+            MotionEvent.ACTION_DOWN -> {
+                position.drag = true
+                position.dragStartX = x
+                position.dragStartY = y
+                adjustView?.onMoveStart()
+                return true
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val dx = position.dx(x)
+                val dy = position.dy(y)
+                if (position.drag) {
+                    adjustView?.onMoveUpdate(dx, dy)
+                    return true
+                }
+            }
+            else -> {
+                if (position.drag) {
+                    adjustView?.onMoveEnd()
+                }
+                position.drag = false
+            }
+        }
+        return false
+    }
+
+    private fun zoomOnTouchEvent(event: MotionEvent?): Boolean {
+        val x = event?.x ?: 0f
+        val y = event?.y ?: 0f
+        when (event?.action) {
+            MotionEvent.ACTION_DOWN -> {
+                drag.drag = true
+                drag.dragStartX = x
+                drag.dragStartY = y
+                adjustView?.onZoomStart()
+                return true
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val dx = drag.dx(x)
+                val dy = drag.dy(y)
+                if (drag.drag) {
+                    adjustView?.onZoomUpdate(dx, dy)
+                    return true
+                }
+            }
+            else -> {
+                if (drag.drag) {
+                    adjustView?.onZoomEnd()
+                }
+                drag.drag = false
+            }
+        }
+        return false
     }
 
     fun setControlOrientation(orientation: ControlBar.WindowAction) {
@@ -184,5 +254,21 @@ class LogWindow : ConstraintLayout, ILogContract.ILogWindowView, ControlBar.Cont
                 v.text = sp
             }
         }
+    }
+
+    interface AdjustView {
+        fun onZoomStart()
+        fun onZoomUpdate(dx: Float, dy: Float)
+        fun onZoomEnd()
+
+        fun onMoveStart()
+        fun onMoveUpdate(dx: Float, dy: Float)
+        fun onMoveEnd()
+    }
+
+    data class Drag(var dragStartX: Float = 0f, var dragStartY: Float = 0f, var drag: Boolean = false) {
+        fun dx(x: Float) = x - dragStartX
+
+        fun dy(y: Float) = y - dragStartY
     }
 }
