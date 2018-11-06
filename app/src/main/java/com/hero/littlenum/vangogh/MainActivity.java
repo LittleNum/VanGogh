@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
     PermissionRequest.Callback cb;
 
     private void register() {
-        Config config = new Config(Build.BRAND + "-" + Integer.toHexString(hashCode()), "null");
+        Config config = new Config(Build.MODEL + "-" + Integer.toHexString(hashCode()), "null");
 //        config.setMode(Config.Mode.Brief);
         config.setUrl("http://10.10.26.16:8000/apr/android/vangogh/uploadlog/");
         VanGoghService.Companion.init(config);

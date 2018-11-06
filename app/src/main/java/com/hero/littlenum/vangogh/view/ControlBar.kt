@@ -9,7 +9,6 @@ import com.hero.littlenum.vangogh.MainActivity
 import com.hero.littlenum.vangogh.R
 import com.hero.littlenum.vangogh.data.Level
 import com.hero.littlenum.vangogh.task.Config
-import com.hero.littlenum.vangogh.task.VanGoghService
 
 class ControlBar : LinearLayout, View.OnClickListener {
     var name: String? = ""
@@ -134,6 +133,8 @@ class ControlBar : LinearLayout, View.OnClickListener {
         togglePrefix.setOnClickListener(this)
         resume.setOnClickListener(this)
         close.setOnClickListener(this)
+        findViewById<View>(R.id.clear_tag).setOnClickListener(this)
+        findViewById<View>(R.id.clear_kw).setOnClickListener(this)
         level.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(parent: AdapterView<*>?) {
             }
@@ -224,10 +225,15 @@ class ControlBar : LinearLayout, View.OnClickListener {
                 listener?.toggleResume()
                 val show = listener?.isResume() ?: false
                 resume.setImageResource(if (show) R.drawable.log_resume_new else R.drawable.log_stop_new)
+                if (show) {
+                    listener?.scrollToBottom()
+                }
             }
             R.id.close -> {
                 windowAction?.closeWindow()
             }
+            R.id.clear_tag -> tagEdit("")
+            R.id.clear_kw -> kwEdit("")
         }
     }
 

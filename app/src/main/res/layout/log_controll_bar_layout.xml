@@ -4,7 +4,7 @@
     android:layout_height="@dimen/control_bar_height"
     android:orientation="horizontal">
 
-    <TextView
+    <com.hero.littlenum.vangogh.view.widget.AutoSizingTextView
         android:id="@+id/log_name"
         android:layout_width="@dimen/control_level_width"
         android:layout_height="match_parent"
@@ -13,9 +13,7 @@
         android:layout_marginRight="@dimen/control_margin"
         android:layout_marginBottom="@dimen/inner_padding"
         android:background="@drawable/level_name_background"
-        android:ellipsize="end"
         android:gravity="center_vertical"
-        android:lines="1"
         android:paddingLeft="@dimen/inner_padding"
         android:paddingRight="@dimen/inner_padding"
         android:textColor="@android:color/black" />
@@ -87,6 +85,18 @@
             android:background="@null"
             android:gravity="start"
             android:spinnerMode="dropdown" />
+
+        <ImageView
+            android:id="@+id/clear_tag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:alpha="0.3"
+            android:padding="@dimen/inner_padding"
+            android:scaleX="0.8"
+            android:scaleY="0.8"
+            android:src="@drawable/log_close_white" />
     </RelativeLayout>
 
     <RelativeLayout
@@ -125,6 +135,18 @@
             android:background="@null"
             android:gravity="start"
             android:spinnerMode="dropdown" />
+
+        <ImageView
+            android:id="@+id/clear_kw"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:alpha="0.3"
+            android:padding="@dimen/inner_padding"
+            android:scaleX="0.8"
+            android:scaleY="0.8"
+            android:src="@drawable/log_close_white" />
     </RelativeLayout>
 
     <ImageView
