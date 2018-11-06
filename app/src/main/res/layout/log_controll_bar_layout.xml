@@ -52,6 +52,7 @@
     </RelativeLayout>
 
     <RelativeLayout
+        android:id="@+id/tag_layout"
         android:layout_width="@dimen/control_level_width"
         android:layout_height="match_parent"
         android:layout_marginLeft="@dimen/control_margin"
@@ -60,15 +61,6 @@
         android:layout_marginBottom="@dimen/inner_padding"
         android:background="@drawable/level_spinner_background"
         android:orientation="horizontal">
-
-        <com.hero.littlenum.vangogh.view.widget.SpecialSpinner
-            android:id="@+id/tag_history_spinner"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_alignParentBottom="true"
-            android:background="@null"
-            android:gravity="start"
-            android:spinnerMode="dropdown" />
 
         <ImageView
             android:id="@+id/tag_history"
@@ -86,9 +78,19 @@
             android:layout_toRightOf="@+id/tag_history"
             android:gravity="center_vertical"
             android:hint="@string/control_search_tag" />
+
+        <com.hero.littlenum.vangogh.view.widget.SpecialSpinner
+            android:id="@+id/tag_history_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_alignParentBottom="true"
+            android:background="@null"
+            android:gravity="start"
+            android:spinnerMode="dropdown" />
     </RelativeLayout>
 
     <RelativeLayout
+        android:id="@+id/kw_layout"
         android:layout_width="@dimen/control_level_width"
         android:layout_height="match_parent"
         android:layout_marginLeft="@dimen/control_margin"
@@ -97,15 +99,6 @@
         android:layout_marginBottom="@dimen/inner_padding"
         android:background="@drawable/level_spinner_background"
         android:orientation="horizontal">
-
-        <com.hero.littlenum.vangogh.view.widget.SpecialSpinner
-            android:id="@+id/kw_history_spinner"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_alignParentBottom="true"
-            android:background="@null"
-            android:gravity="start"
-            android:spinnerMode="dropdown" />
 
         <ImageView
             android:id="@+id/kw_history"
@@ -123,6 +116,15 @@
             android:layout_toRightOf="@+id/kw_history"
             android:gravity="center_vertical"
             android:hint="@string/control_search_keyword" />
+
+        <com.hero.littlenum.vangogh.view.widget.SpecialSpinner
+            android:id="@+id/kw_history_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_alignParentBottom="true"
+            android:background="@null"
+            android:gravity="start"
+            android:spinnerMode="dropdown" />
     </RelativeLayout>
 
     <ImageView

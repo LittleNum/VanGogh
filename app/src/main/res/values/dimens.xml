@@ -9,4 +9,5 @@
     <dimen name="inner_padding">5dp</dimen>
     <dimen name="edit_min_height">48dp</dimen>
     <dimen name="edit_margin">16dp</dimen>
+    <dimen name="edit_margin_small">4dp</dimen>
 </resources>

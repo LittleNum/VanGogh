@@ -1,6 +1,8 @@
 package com.hero.littlenum.vangogh.present
 
+import android.content.Context
 import com.hero.littlenum.vangogh.data.Log
+import com.hero.littlenum.vangogh.task.Config
 
 interface ILogContract {
     interface ILogPresent {
@@ -11,6 +13,8 @@ interface ILogContract {
         fun clearLog()
 
         fun saveLogToLocal()
+
+        fun postHistoryLogIfExist()
 
         fun handleUncaughtException()
 
@@ -30,6 +34,10 @@ interface ILogContract {
 
         fun scrollToBottom()
 
-        fun getLogName(): String
+        fun setSuffix(suffix: String?)
+
+        fun setMode(mode: Config.Mode)
+
+        fun getViewContext(): Context
     }
 }

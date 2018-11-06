@@ -6,7 +6,7 @@
     android:background="@drawable/log_window_bg"
     android:focusable="false">
 
-    <HorizontalScrollView
+    <com.hero.littlenum.vangogh.view.widget.SpecialHorizontalScrollView
         android:id="@+id/tab_scrollview"
         android:layout_width="match_parent"
         android:layout_height="@dimen/control_bar_height"
@@ -19,7 +19,7 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent" />
 
-    </HorizontalScrollView>
+    </com.hero.littlenum.vangogh.view.widget.SpecialHorizontalScrollView>
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/log_list"
@@ -32,7 +32,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="@dimen/control_margin"
-        android:src="@drawable/log_position"
+        android:src="@drawable/log_bottom_zoom"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent" />
 
@@ -41,7 +41,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="@dimen/control_margin"
-        android:src="@drawable/log_bottom_zoom"
+        android:src="@drawable/log_position"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 </com.hero.littlenum.vangogh.view.LogWindow>

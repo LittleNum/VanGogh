@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Toast;
 
+import com.hero.littlenum.vangogh.task.Config;
 import com.hero.littlenum.vangogh.task.PermissionRequest;
 import com.hero.littlenum.vangogh.task.VanGoghService;
 
@@ -27,6 +29,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         activity = this;
+
+
+
         setContentView(R.layout.activity_main);
         new Thread(new Runnable() {
             @Override
@@ -45,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Toast.makeText(MainActivity.this, "text", Toast.LENGTH_SHORT).show();
-                VanGoghService.Companion.startVanGogh(MainActivity.this, getRequestedOrientation());
+                VanGoghService.Companion.startVanGogh(MainActivity.this);
             }
         });
         findViewById(R.id.stop).setOnClickListener(new View.OnClickListener() {
@@ -62,6 +67,14 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(it);
             }
         });
+        findViewById(R.id.exception).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String x = "xxx";
+                int y = Integer.parseInt(x);
+                System.out.print(y);
+            }
+        });
         register();
     }
 
@@ -76,7 +89,11 @@ public class MainActivity extends AppCompatActivity {
     PermissionRequest.Callback cb;
 
     private void register() {
-        VanGoghService.Companion.registerPermissionRequestContext(new PermissionRequest() {
+        Config config = new Config(Build.BRAND + "-" + Integer.toHexString(hashCode()), "null");
+//        config.setMode(Config.Mode.Brief);
+        config.setUrl("http://10.10.26.16:8000/vangogh/uploadlog/");
+        VanGoghService.Companion.init(config);
+        config.setRequest(new PermissionRequest() {
             @Override
             public void request(@NotNull String[] permission, @NotNull Callback callback) {
 

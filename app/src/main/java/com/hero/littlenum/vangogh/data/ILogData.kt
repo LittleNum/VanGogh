@@ -1,15 +1,25 @@
 package com.hero.littlenum.vangogh.data
 
+import android.content.Context
+
 interface ILogData {
     fun clearLog()
 
     fun addNewLog(log: String): Log?
 
+    fun setSuffix(suffix: String?)
+
+    fun setLogInfo(info: String?)
+
     fun getAllLog(): List<Log>
 
     fun saveLogToLocal()
 
-    fun uploadLogs(name: String)
+    fun uploadLogs()
+
+    fun postHistoryLogIfExist()
+
+    fun handleUncaughtException()
 
     fun filterLogByLevel(level: Level)
 
@@ -36,4 +46,6 @@ interface ILogData {
     fun togglePrefix()
 
     fun toggleResume()
+
+    fun setContext(ctx: Context)
 }

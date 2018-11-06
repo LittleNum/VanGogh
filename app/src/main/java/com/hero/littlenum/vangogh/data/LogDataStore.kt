@@ -1,11 +1,16 @@
 package com.hero.littlenum.vangogh.data
 
+import android.content.Context
+import android.os.Handler
+import android.os.Looper
+import android.widget.Toast
+import com.hero.littlenum.vangogh.R
 import com.hero.littlenum.vangogh.data.interceptors.*
 import okhttp3.*
-import java.io.IOException
-import java.lang.StringBuilder
+import java.io.*
 
-class LogDataStore : ILogData {
+class LogDataStore(var name: String = "", var logPrefix: String? = "", var url: String = "") : ILogData {
+    val historyCachePath: String = "history_log.txt"
     var originLogs = StringBuilder()
     val allLogs = mutableListOf<Log>()
     val filterLogs = mutableListOf<Log>()
@@ -15,6 +20,8 @@ class LogDataStore : ILogData {
     val keyWordInterceptor = KeyWordInterceptor()
     val prefixInterceptor = PrefixInterceptor()
     val resumeInterceptor = ResumeInterceptor()
+    private lateinit var context: Context
+    private val handler = Handler(Looper.getMainLooper())
 
     val interceptors = listOf(
             levelInterceptor,
@@ -24,7 +31,7 @@ class LogDataStore : ILogData {
             resumeInterceptor)
 
     override fun clearLog() {
-        originLogs = StringBuilder()
+        originLogs = StringBuilder(logPrefix)
         allLogs.clear()
         filterLogs.clear()
     }
@@ -36,27 +43,90 @@ class LogDataStore : ILogData {
         return intercept(t)
     }
 
+    override fun setSuffix(suffix: String?) {
+        name = suffix ?: ""
+    }
+
+    override fun setLogInfo(info: String?) {
+        logPrefix = info ?: ""
+        originLogs.insert(0, logPrefix)
+    }
+
     override fun getAllLog(): List<Log> = filterLogs
 
     override fun saveLogToLocal() {
     }
 
-    override fun uploadLogs(name: String) {
+    override fun uploadLogs() {
+        postLogs(name, originLogs.toString())
+    }
+
+    private fun postLogs(name: String, log: String) {
         val client = OkHttpClient()
         val post = FormBody.Builder().add("name", name)
-                .add("log", originLogs.toString())
+                .add("log", log)
                 .build()
-        val request = Request.Builder().post(post).url("http://10.10.26.16:8000/vangogh/uploadlog/").build()
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
+        try {
+            val request = Request.Builder().post(post).url(url).build()
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    e.printStackTrace()
+                    handler.post { Toast.makeText(context, R.string.upload_fail, Toast.LENGTH_SHORT).show() }
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    print(response)
+                    handler.post { Toast.makeText(context, R.string.upload_success, Toast.LENGTH_SHORT).show() }
+                }
+            })
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    override fun postHistoryLogIfExist() {
+        var br: BufferedReader? = null
+        try {
+            val path = context.externalCacheDir.absolutePath + historyCachePath
+            val file = File(path)
+            if (file.exists()) {
+                val os = InputStreamReader(FileInputStream(path), "UTF-8")
+                br = BufferedReader(os)
+                val log = br.readText()
+                br.close()
+                postLogs("historylog-" + Integer.toHexString(hashCode()), log)
+                file.delete()
+                android.util.Log.e("sendlog","sendlog " +android.util.Log.getStackTraceString(Throwable("loglog")))
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            try {
+                br?.close()
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
+        }
+    }
 
-            override fun onResponse(call: Call, response: Response) {
-                print(response)
+    override fun handleUncaughtException() {
+        var bw: BufferedWriter? = null
+        try {
+            val path = context.externalCacheDir.absolutePath + historyCachePath
+            val os = OutputStreamWriter(FileOutputStream(path, true), "UTF-8")
+            bw = BufferedWriter(os)
+            bw.write(originLogs.toString())
+            bw.flush()
+            bw.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            try {
+                bw?.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-        })
-
+        }
     }
 
     override fun filterLogByLevel(level: Level) {
@@ -96,6 +166,10 @@ class LogDataStore : ILogData {
 
     override fun toggleResume() {
         resumeInterceptor.doResume = !resumeInterceptor.doResume
+    }
+
+    override fun setContext(ctx: Context) {
+        this.context = ctx
     }
 
     private fun intercept(log: Log): Log? {

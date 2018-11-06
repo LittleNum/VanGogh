@@ -8,8 +8,13 @@ import com.hero.littlenum.vangogh.task.LogcatTask
 import com.hero.littlenum.vangogh.task.OnLogListener
 import com.hero.littlenum.vangogh.view.IViewAction
 
-class VanGoghPresent(val view: ILogContract.ILogWindowView, val data: ILogData = LogDataStore()) :
+class VanGoghPresent(val view: ILogContract.ILogWindowView, var data: ILogData = LogDataStore()) :
         ILogContract.ILogPresent, OnLogListener, IViewAction {
+
+    init {
+        data.setContext(view.getViewContext())
+    }
+
     val task = LogcatTask()
 
     override fun startShowLog() {
@@ -32,8 +37,12 @@ class VanGoghPresent(val view: ILogContract.ILogWindowView, val data: ILogData =
         data.saveLogToLocal()
     }
 
+    override fun postHistoryLogIfExist() {
+        data.postHistoryLogIfExist()
+    }
+
     override fun handleUncaughtException() {
-        data.uploadLogs(view.getLogName())
+        data.handleUncaughtException()
     }
 
     override fun close() {
@@ -54,8 +63,8 @@ class VanGoghPresent(val view: ILogContract.ILogWindowView, val data: ILogData =
 
     }
 
-    override fun upload(name: String) {
-        data.uploadLogs(name)
+    override fun upload() {
+        data.uploadLogs()
     }
 
     override fun selectNewLevel(level: Level) {

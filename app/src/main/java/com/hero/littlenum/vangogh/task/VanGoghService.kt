@@ -16,11 +16,13 @@ import android.view.WindowManager
 import android.view.WindowManager.LayoutParams.*
 import android.widget.Toast
 import com.hero.littlenum.vangogh.R
+import com.hero.littlenum.vangogh.data.LogDataStore
 import com.hero.littlenum.vangogh.present.ILogContract
 import com.hero.littlenum.vangogh.present.VanGoghPresent
 import com.hero.littlenum.vangogh.view.ControlBar
 import com.hero.littlenum.vangogh.view.IViewAction
 import com.hero.littlenum.vangogh.view.LogWindow
+import java.lang.IllegalStateException
 
 const val RATIO = 3f / 4
 const val ORIGIN_X = 0
@@ -34,6 +36,7 @@ class VanGoghService : Service() {
     private lateinit var displayMetrics: DisplayMetrics
 
     private lateinit var vgPresent: ILogContract.ILogPresent
+    private lateinit var dataStore: LogDataStore
 
     private var added = false
 
@@ -43,6 +46,7 @@ class VanGoghService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        serviceExisted = true
         initWindow()
         initParams()
         vgPresent.startShowLog()
@@ -56,20 +60,27 @@ class VanGoghService : Service() {
                 mWindowManager.defaultDisplay.getMetrics(displayMetrics)
             }
         }.start()
+        ue = {
+            vgPresent.handleUncaughtException()
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val action = intent?.getIntExtra(INTENT_KEY_ACTION, Action.Invalid.action)
-        val orientation = intent?.getIntExtra(INTENT_KEY_ORIENTATION, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
+                ?: Action.Invalid.action
         when (action) {
             Action.Start.action -> {
-                addWindow(orientation)
+                vgPresent.postHistoryLogIfExist()
+                addWindow(config?.orientation, config?.mode)
             }
             Action.Stop.action -> {
                 vgPresent.stopTask()
                 removeWindow()
             }
-            Action.UncaughtException.action -> vgPresent.handleUncaughtException()
+            Action.UncaughtException.action -> {
+                vgPresent.handleUncaughtException()
+                removeWindow()
+            }
         }
         return super.onStartCommand(intent, flags, startId)
     }
@@ -77,8 +88,9 @@ class VanGoghService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         removeWindow()
-        request = null
+        config?.request = null
         checkMetrics = false
+        serviceExisted = false
     }
 
     private fun initWindow() {
@@ -95,13 +107,14 @@ class VanGoghService : Service() {
         mWMLayoutParams.flags = FLAG_NOT_TOUCH_MODAL or FLAG_NOT_FOCUSABLE
         val portrait = displayMetrics.widthPixels < displayMetrics.heightPixels
         mWMLayoutParams.width = if (portrait) displayMetrics.widthPixels else displayMetrics.widthPixels / 2
-        mWMLayoutParams.height = if (portrait) (displayMetrics.widthPixels * RATIO).toInt()
-        else (displayMetrics.heightPixels * RATIO).toInt()
+        mWMLayoutParams.height = ((if (portrait) displayMetrics.widthPixels else displayMetrics.heightPixels) * RATIO).toInt()
     }
 
     private fun initParams() {
         wView = LayoutInflater.from(this).inflate(R.layout.log_contain_layout, null, false) as LogWindow
-        vgPresent = VanGoghPresent(wView)
+        wView.setSuffix(config?.suffix)
+        dataStore = LogDataStore(config?.suffix ?: "", config?.logInfo, config?.url ?: "")
+        vgPresent = VanGoghPresent(wView, dataStore)
         wView.viewAction = vgPresent as IViewAction
         wView.setControlOrientation(object : ControlBar.WindowAction {
             override fun toggleOrientation() {
@@ -153,23 +166,37 @@ class VanGoghService : Service() {
         }
     }
 
-    val addView = { orientation: Int? ->
-        mWMLayoutParams.screenOrientation = orientation ?: ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+    private val addView = { orientation: Config.Orientation ->
+        mWMLayoutParams.screenOrientation = orientation.value
         mWindowManager.addView(wView, mWMLayoutParams)
         added = true
     }
 
-    private fun addWindow(orientation: Int?) {
+    private fun addWindow(orientation: Config.Orientation?, mode: Config.Mode?) {
         if (added) {
             return
         }
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(applicationContext)) {
-            addView(orientation)
+        wView.setMode(mode ?: Config.Mode.Default)
+        wView.setSuffix(config?.suffix)
+        dataStore.name = config?.suffix ?: Build.BRAND + "-" + Integer.toHexString(hashCode())
+        dataStore.logPrefix = config?.logInfo ?: ""
+        dataStore.url = config?.url ?: ""
+        if (mode == Config.Mode.Default) {
+            val portrait = displayMetrics.widthPixels < displayMetrics.heightPixels
+            mWMLayoutParams.width = if (portrait) displayMetrics.widthPixels else displayMetrics.widthPixels / 2
+            mWMLayoutParams.height = ((if (portrait) displayMetrics.widthPixels else displayMetrics.heightPixels) * RATIO).toInt()
         } else {
-            requestPermission(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, object : PermissionRequest.Callback {
+            mWMLayoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT
+            mWMLayoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(applicationContext)) {
+            addView(orientation ?: Config.Orientation.Portrait)
+        } else {
+            requestSpecialPermission(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, object : PermissionRequest.Callback {
                 override fun onResult() {
                     if (Settings.canDrawOverlays(applicationContext)) {
-                        addView(orientation)
+                        addView(orientation ?: Config.Orientation.Portrait)
                     } else {
                         Toast.makeText(applicationContext, R.string.permission_request, Toast.LENGTH_SHORT).show()
                     }
@@ -180,9 +207,11 @@ class VanGoghService : Service() {
 
     private fun removeWindow() {
         try {
-            added = false
             vgPresent.close()
-            mWindowManager.removeView(wView)
+            if (added) {
+                mWindowManager.removeView(wView)
+            }
+            added = false
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -202,38 +231,66 @@ class VanGoghService : Service() {
         }
 
         const val INTENT_KEY_ACTION = "action"
-        const val INTENT_KEY_ORIENTATION = "orientation"
-        var request: PermissionRequest? = null
+        const val INTENT_KEY_ORIENTATION = "value"
+        const val INTENT_KEY_MODE = "mode"
+        private var serviceExisted = false
+        private var config: Config? = null
+        private var ue = {}
 
-        fun startVanGogh(activity: Activity, orientation: Int = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
-            val it = Intent(activity, VanGoghService::class.java)
-            it.putExtra(INTENT_KEY_ACTION, Action.Start.action)
-            it.putExtra(INTENT_KEY_ORIENTATION, orientation)
-            activity.startService(it)
+        fun startVanGogh(activity: Activity) {
+            if (config == null) {
+                throw IllegalStateException("config is null,must set config before start service")
+            }
+            config?.apply {
+                val it = Intent(activity, VanGoghService::class.java)
+                it.putExtra(INTENT_KEY_ACTION, Action.Start.action)
+                it.putExtra(INTENT_KEY_ORIENTATION, this.orientation.value)
+                it.putExtra(INTENT_KEY_MODE, this.mode)
+                activity.startService(it)
+            }
         }
 
         fun stopVanGogh(activity: Activity) {
-            val it = Intent(activity, VanGoghService::class.java)
-            it.putExtra(INTENT_KEY_ACTION, Action.Stop.action)
-            activity.startService(it)
+            if (serviceExisted) {
+                val it = Intent(activity, VanGoghService::class.java)
+                it.putExtra(INTENT_KEY_ACTION, Action.Stop.action)
+                activity.startService(it)
+            }
         }
 
-        fun handleUnCaughtException(activity: Activity) {
-            val it = Intent(activity, VanGoghService::class.java)
-            it.putExtra(INTENT_KEY_ACTION, Action.UncaughtException.action)
-            activity.startService(it)
+        fun handleUnCaughtException(activity: Context) {
+            if (serviceExisted) {
+                ue()
+            }
         }
 
         fun registerPermissionRequestContext(request: PermissionRequest?) {
-            this.request = request
+            config?.let {
+                it.request = request
+            }
         }
 
-        fun requestPermission(permission: Array<String>, callback: PermissionRequest.Callback) {
-            request?.request(permission, callback)
+        private fun requestPermission(permission: Array<String>, callback: PermissionRequest.Callback) {
+            config?.request?.request(permission, callback)
         }
 
-        fun requestPermission(permission: String, callback: PermissionRequest.Callback) {
-            request?.requestSpecial(permission, callback)
+        private fun requestPermission(permission: String, callback: PermissionRequest.Callback) {
+            config?.request?.request(permission, callback)
+        }
+
+        private fun requestSpecialPermission(permission: String, callback: PermissionRequest.Callback) {
+            config?.request?.requestSpecial(permission, callback)
+        }
+
+        /**
+         * use Config().apply{
+         *  suffix = ""
+         *  loginfo = ""
+         *  ...
+         * }
+         */
+        fun init(config: Config) {
+            this.config = config
         }
     }
 

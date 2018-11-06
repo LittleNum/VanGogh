@@ -1,16 +1,36 @@
 package com.hero.littlenum.vangogh.view
 
 import android.content.Context
-import android.os.Build
 import android.util.AttributeSet
 import android.view.View
 import android.widget.*
 import com.hero.littlenum.vangogh.MainActivity
 import com.hero.littlenum.vangogh.R
 import com.hero.littlenum.vangogh.data.Level
+import com.hero.littlenum.vangogh.task.Config
+import com.hero.littlenum.vangogh.task.VanGoghService
 
 class ControlBar : LinearLayout, View.OnClickListener {
-    val name = Build.BRAND + "-" + Integer.toHexString(hashCode())
+    var name: String? = ""
+        set(value) {
+            field = value
+            logName.text = name
+        }
+    var mode: Config.Mode = Config.Mode.Default
+        set(value) {
+            field = value
+            val visible = if(field == Config.Mode.Default) View.VISIBLE else View.GONE
+            logName.visibility = visible
+            levelSelect.visibility = visible
+            tagLayout.visibility = visible
+            kwLayout.visibility = visible
+            clear.visibility = visible
+            resume.visibility = visible
+            top.visibility = visible
+            bottom.visibility = visible
+            orientation.visibility = visible
+            togglePrefix.visibility = visible
+        }
     private lateinit var logName: TextView
     private lateinit var level: Spinner
     private lateinit var levelText: TextView
@@ -18,9 +38,11 @@ class ControlBar : LinearLayout, View.OnClickListener {
     private lateinit var tagHistory: ImageView
     private lateinit var tag: TextView
     private lateinit var tagSpinner: Spinner
+    private lateinit var tagLayout: RelativeLayout
     private lateinit var kwHistory: ImageView
     private lateinit var keyword: TextView
     private lateinit var kwSpinner: Spinner
+    private lateinit var kwLayout: RelativeLayout
     private lateinit var clear: ImageView
     private lateinit var top: ImageView
     private lateinit var bottom: ImageView
@@ -73,9 +95,11 @@ class ControlBar : LinearLayout, View.OnClickListener {
         level = findViewById(R.id.level)
         levelText = findViewById(R.id.level_text)
         levelSelect = findViewById(R.id.level_select)
+        tagLayout = findViewById(R.id.tag_layout)
         tagHistory = findViewById(R.id.tag_history)
         tag = findViewById(R.id.tag)
         tagSpinner = findViewById(R.id.tag_history_spinner)
+        kwLayout = findViewById(R.id.kw_layout)
         kwHistory = findViewById(R.id.kw_history)
         keyword = findViewById(R.id.keyword)
         kwSpinner = findViewById(R.id.kw_history_spinner)
@@ -187,7 +211,7 @@ class ControlBar : LinearLayout, View.OnClickListener {
             R.id.clear -> listener?.clearLogByControl()
             R.id.top -> listener?.scrollToTop()
             R.id.bottom -> listener?.scrollToBottom()
-            R.id.upload -> listener?.upload(name)
+            R.id.upload -> listener?.upload()
             R.id.orientation -> windowAction?.toggleOrientation()
             R.id.prefix -> {
                 listener?.togglePrefix()
@@ -213,7 +237,7 @@ class ControlBar : LinearLayout, View.OnClickListener {
         fun clearLogByControl()
         fun scrollToTop()
         fun scrollToBottom()
-        fun upload(name: String)
+        fun upload()
         fun showPrefix(): Boolean
         fun orientation(): Int
         fun isResume(): Boolean

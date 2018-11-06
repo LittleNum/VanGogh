@@ -14,13 +14,14 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.TextView
 import com.hero.littlenum.vangogh.R
 import com.hero.littlenum.vangogh.data.Level
 import com.hero.littlenum.vangogh.data.Log
 import com.hero.littlenum.vangogh.present.ILogContract
+import com.hero.littlenum.vangogh.task.Config
+import com.hero.littlenum.vangogh.view.widget.SpecialHorizontalScrollView
 
 class LogWindow : ConstraintLayout, ILogContract.ILogWindowView, ControlBar.ControlListener {
     var viewAction: IViewAction? = null
@@ -29,10 +30,11 @@ class LogWindow : ConstraintLayout, ILogContract.ILogWindowView, ControlBar.Cont
             controlBar.listener = this
         }
     var adjustView: AdjustView? = null
+    var viewMode = Config.Mode.Default
     private var logList = mutableListOf<Log>()
     private lateinit var controlBar: ControlBar
     private lateinit var logListRv: RecyclerView
-    private lateinit var tabScrollView: HorizontalScrollView
+    private lateinit var tabScrollView: SpecialHorizontalScrollView
     private lateinit var zoom: ImageView
     private lateinit var positionAdjust: ImageView
     private var adapter = LogAdapter()
@@ -40,6 +42,7 @@ class LogWindow : ConstraintLayout, ILogContract.ILogWindowView, ControlBar.Cont
 
     private val drag = Drag()
     private val position = Drag()
+    private val dragInBrief = Drag()
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
@@ -75,6 +78,37 @@ class LogWindow : ConstraintLayout, ILogContract.ILogWindowView, ControlBar.Cont
         })
         zoom.setOnTouchListener { _, event: MotionEvent? -> zoomOnTouchEvent(event) }
         positionAdjust.setOnTouchListener { _, event: MotionEvent? -> adjustPosition(event) }
+        tabScrollView.setOnTouchListener { _, event: MotionEvent? ->
+            adjustPositionInBrief(event)
+        }
+    }
+
+    private fun adjustPositionInBrief(event: MotionEvent?): Boolean {
+        if (viewMode == Config.Mode.Brief) {
+            val x = event?.rawX ?: 0f
+            val y = event?.rawY ?: 0f
+            when (event?.action) {
+                MotionEvent.ACTION_MOVE -> {
+                    if (dragInBrief.dragStartX == 0f || dragInBrief.dragStartY == 0f) {
+                        dragInBrief.dragStartX = x
+                        dragInBrief.dragStartY = y
+                        adjustView?.onMoveStart()
+                    } else {
+                        val dx = dragInBrief.dx(x)
+                        val dy = dragInBrief.dy(y)
+                        adjustView?.onMoveUpdate(dx, dy)
+                    }
+                    return true
+                }
+                else -> {
+                    dragInBrief.drag = false
+                    dragInBrief.dragStartX = 0f
+                    dragInBrief.dragStartY = 0f
+                }
+            }
+            return false
+        }
+        return false
     }
 
     private fun adjustPosition(event: MotionEvent?): Boolean {
@@ -161,8 +195,8 @@ class LogWindow : ConstraintLayout, ILogContract.ILogWindowView, ControlBar.Cont
         viewAction?.clearLog()
     }
 
-    override fun upload(name: String) {
-        viewAction?.upload(name)
+    override fun upload() {
+        viewAction?.upload()
     }
 
     override fun showPrefix(): Boolean = viewAction?.showPrefix() ?: true
@@ -215,7 +249,31 @@ class LogWindow : ConstraintLayout, ILogContract.ILogWindowView, ControlBar.Cont
         logListRv.scrollToPosition(adapter.itemCount - 1)
     }
 
-    override fun getLogName(): String = controlBar.name
+    override fun setSuffix(suffix: String?) {
+        controlBar.name = suffix ?: ""
+    }
+
+    override fun setMode(mode: Config.Mode) {
+        this.viewMode = mode
+        when (mode) {
+            Config.Mode.Default -> {
+                tabScrollView.intercept = false
+                controlBar.mode = mode
+                logListRv.visibility = View.VISIBLE
+                positionAdjust.visibility = View.VISIBLE
+                zoom.visibility = View.VISIBLE
+            }
+            Config.Mode.Brief -> {
+                tabScrollView.intercept = true
+                controlBar.mode = mode
+                logListRv.visibility = View.GONE
+                zoom.visibility = View.GONE
+                positionAdjust.visibility = View.GONE
+            }
+        }
+    }
+
+    override fun getViewContext(): Context = context
 
     inner class LogAdapter : RecyclerView.Adapter<VH>() {
         override fun getItemCount(): Int = logList.size

@@ -7,6 +7,7 @@ import android.os.Build
 import android.view.LayoutInflater
 import android.view.WindowManager
 import android.widget.EditText
+import android.widget.ImageView
 import com.hero.littlenum.vangogh.R
 
 class TextEditDialog(activity: Activity, val title: String, private val listener: (String?) -> Unit?) {
@@ -26,6 +27,9 @@ class TextEditDialog(activity: Activity, val title: String, private val listener
 
     fun show() {
         dialog.show()
+        dialog.findViewById<ImageView?>(R.id.clear)?.setOnClickListener {
+            dialog.findViewById<EditText?>(R.id.edit)?.setText("")
+        }
     }
 
     fun dismiss() {
