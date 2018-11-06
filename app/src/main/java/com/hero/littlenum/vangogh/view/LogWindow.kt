@@ -195,8 +195,11 @@ class LogWindow : ConstraintLayout, ILogContract.ILogWindowView, ControlBar.Cont
         viewAction?.clearLog()
     }
 
-    override fun upload() {
-        viewAction?.upload()
+    override fun upload(v: View?) {
+        viewAction?.upload {
+            v?.isEnabled = it
+            v?.alpha = if (it) 1.0f else 0.3f
+        }
     }
 
     override fun showPrefix(): Boolean = viewAction?.showPrefix() ?: true

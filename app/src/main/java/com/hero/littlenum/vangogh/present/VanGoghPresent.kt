@@ -63,8 +63,8 @@ class VanGoghPresent(val view: ILogContract.ILogWindowView, var data: ILogData =
 
     }
 
-    override fun upload() {
-        data.uploadLogs()
+    override fun upload(listener: (Boolean) -> Unit) {
+        data.uploadLogs(listener)
     }
 
     override fun selectNewLevel(level: Level) {

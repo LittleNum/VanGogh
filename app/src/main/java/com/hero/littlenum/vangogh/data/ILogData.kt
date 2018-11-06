@@ -15,7 +15,7 @@ interface ILogData {
 
     fun saveLogToLocal()
 
-    fun uploadLogs()
+    fun uploadLogs(listener: (Boolean) -> Unit)
 
     fun postHistoryLogIfExist()
 

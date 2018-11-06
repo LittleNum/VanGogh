@@ -27,7 +27,7 @@ import java.lang.IllegalStateException
 const val RATIO = 3f / 4
 const val ORIGIN_X = 0
 const val ORIGIN_Y = 0
-const val CHECK_SLEEP = 5000L
+const val CHECK_SLEEP = 2500L
 
 class VanGoghService : Service() {
     private lateinit var wView: LogWindow
@@ -58,6 +58,22 @@ class VanGoghService : Service() {
                     e.printStackTrace()
                 }
                 mWindowManager.defaultDisplay.getMetrics(displayMetrics)
+                val w = mWMLayoutParams.width
+                val h = mWMLayoutParams.height
+                var update = false
+                if (w > displayMetrics.widthPixels) {
+                    mWMLayoutParams.width = (displayMetrics.widthPixels * RATIO).toInt()
+                    update = true
+                }
+                if (h > displayMetrics.heightPixels) {
+                    mWMLayoutParams.height = (displayMetrics.heightPixels * RATIO).toInt()
+                    update = true
+                }
+                if (update) {
+                    wView.post {
+                        mWindowManager.updateViewLayout(wView, mWMLayoutParams)
+                    }
+                }
             }
         }.start()
         ue = {
@@ -181,6 +197,7 @@ class VanGoghService : Service() {
         dataStore.name = config?.suffix ?: Build.BRAND + "-" + Integer.toHexString(hashCode())
         dataStore.logPrefix = config?.logInfo ?: ""
         dataStore.url = config?.url ?: ""
+        config?.maxBytes?.let { dataStore.maxBytes = it }
         if (mode == Config.Mode.Default) {
             val portrait = displayMetrics.widthPixels < displayMetrics.heightPixels
             mWMLayoutParams.width = if (portrait) displayMetrics.widthPixels else displayMetrics.widthPixels / 2

@@ -38,8 +38,11 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 try {
                     while (logResume) {
-                        Thread.sleep(500);
+                        Thread.sleep(50);
                         Log.e("vangogh brillant", "--------------- log :" + new Random().nextInt());
+                        Log.i("vangogh brillant", "---------------info info info log :" + new Random().nextInt());
+                        Log.d("vangogh brillant", "---------------debug debug debug :" + new Random().nextInt());
+                        Log.v("vangogh brillant", "---------------verbose verbose verbose :" + new Random().nextInt());
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -91,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
     private void register() {
         Config config = new Config(Build.BRAND + "-" + Integer.toHexString(hashCode()), "null");
 //        config.setMode(Config.Mode.Brief);
-        config.setUrl("http://10.10.26.16:8000/vangogh/uploadlog/");
+        config.setUrl("http://10.10.26.16:8000/apr/android/vangogh/uploadlog/");
         VanGoghService.Companion.init(config);
         config.setRequest(new PermissionRequest() {
             @Override

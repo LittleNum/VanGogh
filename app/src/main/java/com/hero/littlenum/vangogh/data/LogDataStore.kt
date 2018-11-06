@@ -8,9 +8,13 @@ import com.hero.littlenum.vangogh.R
 import com.hero.littlenum.vangogh.data.interceptors.*
 import okhttp3.*
 import java.io.*
+import java.util.concurrent.Executors
+
+const val MAX_BYTES: Int = 5 * 1024 * 1024
 
 class LogDataStore(var name: String = "", var logPrefix: String? = "", var url: String = "") : ILogData {
     val historyCachePath: String = "history_log.txt"
+    val logCachePath: String = "log_cache.txt"
     var originLogs = StringBuilder()
     val allLogs = mutableListOf<Log>()
     val filterLogs = mutableListOf<Log>()
@@ -20,8 +24,12 @@ class LogDataStore(var name: String = "", var logPrefix: String? = "", var url: 
     val keyWordInterceptor = KeyWordInterceptor()
     val prefixInterceptor = PrefixInterceptor()
     val resumeInterceptor = ResumeInterceptor()
+
+    var maxBytes = MAX_BYTES
     private lateinit var context: Context
     private val handler = Handler(Looper.getMainLooper())
+    private val executor = Executors.newCachedThreadPool()
+    private var listener: ((Boolean) -> Unit)? = null
 
     val interceptors = listOf(
             levelInterceptor,
@@ -57,29 +65,70 @@ class LogDataStore(var name: String = "", var logPrefix: String? = "", var url: 
     override fun saveLogToLocal() {
     }
 
-    override fun uploadLogs() {
-        postLogs(name, originLogs.toString())
+    override fun uploadLogs(listener: (Boolean) -> Unit) {
+        this.listener = listener
+        postLogs(name, logCachePath)
     }
 
-    private fun postLogs(name: String, log: String) {
+    private fun postLogs(name: String, fileName: String) {
+        postResult(false)
+        executor.execute {
+            var bw: BufferedWriter? = null
+            try {
+                val path = context.externalCacheDir.absolutePath + "/" + fileName
+                val os = OutputStreamWriter(FileOutputStream(path, false), "UTF-8")
+                bw = BufferedWriter(os)
+                var text = originLogs.toString()
+                if (text.length > maxBytes && maxBytes > 0) {
+                    text = text.substring(text.length - maxBytes)
+                }
+                bw.write(text)
+                bw.flush()
+                bw.close()
+                upload(name, fileName)
+            } catch (e: java.lang.Exception) {
+                e.printStackTrace()
+                postResult(true)
+            } finally {
+                bw?.close()
+            }
+        }
+    }
+
+    private fun postResult(result: Boolean) {
+        this.listener?.let {
+            handler.post {
+                it(result)
+            }
+        }
+    }
+
+    private fun upload(name: String, fileName: String) {
         val client = OkHttpClient()
-        val post = FormBody.Builder().add("name", name)
-                .add("log", log)
+        val requestBody = MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("name", name)
+                .addFormDataPart("file", fileName,
+                        RequestBody.create(MediaType.parse("multipart/form-data"), File(context.externalCacheDir.absolutePath + "/" + fileName)))
                 .build()
+
         try {
-            val request = Request.Builder().post(post).url(url).build()
+            val request = Request.Builder().post(requestBody).url(url).build()
             client.newCall(request).enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
                     e.printStackTrace()
+                    postResult(true)
                     handler.post { Toast.makeText(context, R.string.upload_fail, Toast.LENGTH_SHORT).show() }
                 }
 
                 override fun onResponse(call: Call, response: Response) {
+                    postResult(true)
                     print(response)
                     handler.post { Toast.makeText(context, R.string.upload_success, Toast.LENGTH_SHORT).show() }
                 }
             })
         } catch (e: Exception) {
+            postResult(true)
             e.printStackTrace()
         }
     }
@@ -90,13 +139,9 @@ class LogDataStore(var name: String = "", var logPrefix: String? = "", var url: 
             val path = context.externalCacheDir.absolutePath + historyCachePath
             val file = File(path)
             if (file.exists()) {
-                val os = InputStreamReader(FileInputStream(path), "UTF-8")
-                br = BufferedReader(os)
-                val log = br.readText()
-                br.close()
-                postLogs("historylog-" + Integer.toHexString(hashCode()), log)
+                postLogs("historylog-" + Integer.toHexString(hashCode()), historyCachePath)
                 file.delete()
-                android.util.Log.e("sendlog","sendlog " +android.util.Log.getStackTraceString(Throwable("loglog")))
+                android.util.Log.e("sendlog", "sendlog " + android.util.Log.getStackTraceString(Throwable("loglog")))
             }
         } catch (e: Exception) {
             e.printStackTrace()

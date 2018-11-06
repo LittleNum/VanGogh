@@ -2,6 +2,7 @@ package com.hero.littlenum.vangogh.view
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.widget.*
 import com.hero.littlenum.vangogh.MainActivity
@@ -19,7 +20,7 @@ class ControlBar : LinearLayout, View.OnClickListener {
     var mode: Config.Mode = Config.Mode.Default
         set(value) {
             field = value
-            val visible = if(field == Config.Mode.Default) View.VISIBLE else View.GONE
+            val visible = if (field == Config.Mode.Default) View.VISIBLE else View.GONE
             logName.visibility = visible
             levelSelect.visibility = visible
             tagLayout.visibility = visible
@@ -211,7 +212,10 @@ class ControlBar : LinearLayout, View.OnClickListener {
             R.id.clear -> listener?.clearLogByControl()
             R.id.top -> listener?.scrollToTop()
             R.id.bottom -> listener?.scrollToBottom()
-            R.id.upload -> listener?.upload()
+            R.id.upload -> {
+                listener?.upload(v)
+                Log.e("clickupload", "clickupload clickupload clickupload clickupload")
+            }
             R.id.orientation -> windowAction?.toggleOrientation()
             R.id.prefix -> {
                 listener?.togglePrefix()
@@ -237,7 +241,7 @@ class ControlBar : LinearLayout, View.OnClickListener {
         fun clearLogByControl()
         fun scrollToTop()
         fun scrollToBottom()
-        fun upload()
+        fun upload(v: View?)
         fun showPrefix(): Boolean
         fun orientation(): Int
         fun isResume(): Boolean
