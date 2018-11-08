@@ -19,6 +19,7 @@ import com.hero.littlenum.vangogh.task.VanGoghService;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
@@ -29,7 +30,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         activity = this;
-
 
 
         setContentView(R.layout.activity_main);
@@ -78,6 +78,18 @@ public class MainActivity extends AppCompatActivity {
                 System.out.print(y);
             }
         });
+
+        findViewById(R.id.delete).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String path = getExternalCacheDir().getAbsolutePath() + "/" + "history_log.txt";
+                File file = new File(path);
+                if (file.exists()) {
+                    file.delete();
+                }
+            }
+        });
+
         register();
     }
 

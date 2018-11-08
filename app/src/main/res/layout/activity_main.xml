@@ -45,7 +45,16 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp"
         android:text="exception"
+        app:layout_constraintBottom_toTopOf="@+id/start"
+        app:layout_constraintLeft_toLeftOf="parent" />
+
+    <Button
+        android:id="@+id/delete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:text="delete"
         app:layout_constraintBottom_toTopOf="@+id/land"
-        app:layout_constraintLeft_toRightOf="parent"
-        app:layout_constraintRight_toLeftOf="parent" />
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
 </android.support.constraint.ConstraintLayout>

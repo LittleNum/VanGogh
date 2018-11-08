@@ -10,7 +10,7 @@ import okhttp3.*
 import java.io.*
 import java.util.concurrent.Executors
 
-const val MAX_BYTES: Int = 5 * 1024 * 1024
+const val MAX_BYTES: Int = 50 * 1024
 
 class LogDataStore(var name: String = "", var logPrefix: String? = "", var url: String = "") : ILogData {
     val historyCachePath: String = "history_log.txt"
@@ -63,35 +63,33 @@ class LogDataStore(var name: String = "", var logPrefix: String? = "", var url: 
     override fun getAllLog(): List<Log> = filterLogs
 
     override fun saveLogToLocal() {
+        var bw: BufferedWriter? = null
+        try {
+            val path = context.externalCacheDir.absolutePath + "/" + logCachePath
+            val os = OutputStreamWriter(FileOutputStream(path, false), "UTF-8")
+            bw = BufferedWriter(os)
+            var text = originLogs.toString()
+            if (text.length > maxBytes && maxBytes > 0) {
+                text = text.substring(text.length - maxBytes)
+                text = (logPrefix ?: "") + text
+            }
+            bw.write(text)
+            bw.flush()
+            bw.close()
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+            postResult(true)
+        } finally {
+            bw?.close()
+        }
     }
 
     override fun uploadLogs(listener: (Boolean) -> Unit) {
         this.listener = listener
-        postLogs(name, logCachePath)
-    }
-
-    private fun postLogs(name: String, fileName: String) {
         postResult(false)
         executor.execute {
-            var bw: BufferedWriter? = null
-            try {
-                val path = context.externalCacheDir.absolutePath + "/" + fileName
-                val os = OutputStreamWriter(FileOutputStream(path, false), "UTF-8")
-                bw = BufferedWriter(os)
-                var text = originLogs.toString()
-                if (text.length > maxBytes && maxBytes > 0) {
-                    text = text.substring(text.length - maxBytes)
-                }
-                bw.write(text)
-                bw.flush()
-                bw.close()
-                upload(name, fileName)
-            } catch (e: java.lang.Exception) {
-                e.printStackTrace()
-                postResult(true)
-            } finally {
-                bw?.close()
-            }
+            saveLogToLocal()
+            upload(name, logCachePath, false)
         }
     }
 
@@ -103,13 +101,17 @@ class LogDataStore(var name: String = "", var logPrefix: String? = "", var url: 
         }
     }
 
-    private fun upload(name: String, fileName: String) {
+    private fun upload(name: String, fileName: String, delete: Boolean) {
+        val file = File(context.externalCacheDir.absolutePath + "/" + fileName)
+        if (!file.exists()) {
+            return
+        }
         val client = OkHttpClient()
         val requestBody = MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("name", name)
                 .addFormDataPart("file", fileName,
-                        RequestBody.create(MediaType.parse("multipart/form-data"), File(context.externalCacheDir.absolutePath + "/" + fileName)))
+                        RequestBody.create(MediaType.parse("multipart/form-data"), file))
                 .build()
 
         try {
@@ -119,48 +121,58 @@ class LogDataStore(var name: String = "", var logPrefix: String? = "", var url: 
                     e.printStackTrace()
                     postResult(true)
                     handler.post { Toast.makeText(context, R.string.upload_fail, Toast.LENGTH_SHORT).show() }
+                    if (delete) {
+                        file.delete()
+                    }
                 }
 
                 override fun onResponse(call: Call, response: Response) {
                     postResult(true)
                     print(response)
                     handler.post { Toast.makeText(context, R.string.upload_success, Toast.LENGTH_SHORT).show() }
+                    if (delete) {
+                        file.delete()
+                    }
                 }
             })
         } catch (e: Exception) {
             postResult(true)
             e.printStackTrace()
+            if (delete) {
+                file.delete()
+            }
         }
     }
 
     override fun postHistoryLogIfExist() {
-        var br: BufferedReader? = null
         try {
-            val path = context.externalCacheDir.absolutePath + historyCachePath
+            val path = context.externalCacheDir.absolutePath + "/" + historyCachePath
             val file = File(path)
             if (file.exists()) {
-                postLogs("historylog-" + Integer.toHexString(hashCode()), historyCachePath)
-                file.delete()
+                upload("historylog-" + Integer.toHexString(hashCode()), historyCachePath, true)
                 android.util.Log.e("sendlog", "sendlog " + android.util.Log.getStackTraceString(Throwable("loglog")))
             }
         } catch (e: Exception) {
             e.printStackTrace()
-        } finally {
-            try {
-                br?.close()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
         }
     }
 
     override fun handleUncaughtException() {
         var bw: BufferedWriter? = null
         try {
-            val path = context.externalCacheDir.absolutePath + historyCachePath
+            val path = context.externalCacheDir.absolutePath + "/" + historyCachePath
             val os = OutputStreamWriter(FileOutputStream(path, true), "UTF-8")
             bw = BufferedWriter(os)
-            bw.write(originLogs.toString())
+            var text = originLogs.toString()
+            if (text.isEmpty()) {
+                return
+            }
+            android.util.Log.e("sendlog", "handleUncaughtException " + android.util.Log.getStackTraceString(Throwable("loglog")))
+            if (text.length > maxBytes && maxBytes > 0) {
+                text = text.substring(text.length - maxBytes)
+                text = (logPrefix ?: "") + text
+            }
+            bw.write(text)
             bw.flush()
             bw.close()
         } catch (e: Exception) {
