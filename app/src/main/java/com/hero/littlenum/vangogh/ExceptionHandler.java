@@ -21,6 +21,7 @@ public class ExceptionHandler implements Thread.UncaughtExceptionHandler {
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
+        e.printStackTrace();
         Log.e("sss", "uncaught");
         VanGoghService.Companion.handleUnCaughtException(mctx);
         mDefault.uncaughtException(t, e);

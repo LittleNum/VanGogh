@@ -87,6 +87,7 @@ class VanGoghService : Service() {
         when (action) {
             Action.Start.action -> {
                 vgPresent.postHistoryLogIfExist()
+                vgPresent.startShowLog()
                 addWindow(config?.orientation, config?.mode)
             }
             Action.Stop.action -> {

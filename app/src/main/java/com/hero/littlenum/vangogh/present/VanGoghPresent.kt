@@ -18,7 +18,7 @@ class VanGoghPresent(val view: ILogContract.ILogWindowView, var data: ILogData =
     val task = LogcatTask()
 
     override fun startShowLog() {
-        if (task.status == AsyncTask.Status.RUNNING) {
+        if (task.status == AsyncTask.Status.RUNNING || task.status == AsyncTask.Status.FINISHED) {
             return
         }
         task.execute(this)

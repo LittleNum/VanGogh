@@ -3,14 +3,17 @@ package com.hero.littlenum.vangogh.data
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.util.Base64
 import android.widget.Toast
 import com.hero.littlenum.vangogh.R
 import com.hero.littlenum.vangogh.data.interceptors.*
 import okhttp3.*
 import java.io.*
+import java.util.*
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
-const val MAX_BYTES: Int = 50 * 1024
+const val MAX_BYTES: Int = 5 * 1024 * 1024
 
 class LogDataStore(var name: String = "", var logPrefix: String? = "", var url: String = "") : ILogData {
     val historyCachePath: String = "history_log.txt"
@@ -48,6 +51,10 @@ class LogDataStore(var name: String = "", var logPrefix: String? = "", var url: 
         val t = Log(log)
         allLogs.add(t)
         originLogs.append(log).append("\r")
+        if (originLogs.length >= maxBytes) {
+            originLogs.delete(0, maxBytes / 2)
+            originLogs.insert(0, logPrefix ?: "")
+        }
         return intercept(t)
     }
 
@@ -73,6 +80,7 @@ class LogDataStore(var name: String = "", var logPrefix: String? = "", var url: 
                 text = text.substring(text.length - maxBytes)
                 text = (logPrefix ?: "") + text
             }
+            text = Base64.encodeToString(text.toByteArray(), Base64.DEFAULT)
             bw.write(text)
             bw.flush()
             bw.close()
@@ -172,6 +180,7 @@ class LogDataStore(var name: String = "", var logPrefix: String? = "", var url: 
                 text = text.substring(text.length - maxBytes)
                 text = (logPrefix ?: "") + text
             }
+            text = Base64.encodeToString(text.toByteArray(), Base64.DEFAULT)
             bw.write(text)
             bw.flush()
             bw.close()
