@@ -38,11 +38,11 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 try {
                     while (logResume) {
-                        Thread.sleep(50);
-                        Log.e("vangogh brillant", "--------------- log :" + new Random().nextInt());
-                        Log.i("vangogh brillant", "---------------info info info log :" + new Random().nextInt());
-                        Log.d("vangogh brillant", "---------------debug debug debug :" + new Random().nextInt());
-                        Log.v("vangogh brillant", "---------------verbose verbose verbose :" + new Random().nextInt());
+                        Thread.sleep(10);
+                        Log.e("vangogh brillant", "--------------- log adsfafafdfsfsfsfdsfsdfewrw:" + new Random().nextInt());
+                        Log.i("vangogh brillant", "---------------info info info log sdafdasfsafasdfsa:" + new Random().nextInt());
+                        Log.d("vangogh brillant", "---------------debug debug debug sdfsfsafasfsadf:" + new Random().nextInt());
+                        Log.v("vangogh brillant", "---------------verbose verbose verbose sdfdsafsadfsfsafsaf:" + new Random().nextInt());
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -104,9 +104,10 @@ public class MainActivity extends AppCompatActivity {
     PermissionRequest.Callback cb;
 
     private void register() {
-        Config config = new Config(Build.MODEL + "-" + Integer.toHexString(hashCode()), "null");
+        Config config = new Config(Build.MODEL + "-" + System.currentTimeMillis() / 1000, "null");
 //        config.setMode(Config.Mode.Brief);
-        config.setUrl("http://10.10.26.16:8000/apr/android/vangogh/uploadlog/");
+        config.setUrl("https://mobiledev.hexin.cn/apr/android/vangogh/uploadlog/");
+//        config.setUrl("http://10.10.26.16:9999/apr/android/vangogh/uploadlog/");
         VanGoghService.Companion.init(config);
         config.setRequest(new PermissionRequest() {
             @Override

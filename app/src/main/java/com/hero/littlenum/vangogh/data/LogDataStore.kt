@@ -12,8 +12,9 @@ import java.io.*
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.zip.GZIPOutputStream
 
-const val MAX_BYTES: Int = 5 * 1024 * 1024
+const val MAX_BYTES: Int = 15 * 1024 * 1024
 
 class LogDataStore(var name: String = "", var logPrefix: String? = "", var url: String = "") : ILogData {
     val historyCachePath: String = "history_log.txt"
@@ -50,7 +51,7 @@ class LogDataStore(var name: String = "", var logPrefix: String? = "", var url: 
     override fun addNewLog(log: String): Log? {
         val t = Log(log)
         allLogs.add(t)
-        originLogs.append(log).append("\r")
+        originLogs.append(log).append("\n")
         if (originLogs.length >= maxBytes) {
             originLogs.delete(0, maxBytes / 2)
             originLogs.insert(0, logPrefix ?: "")
@@ -73,7 +74,7 @@ class LogDataStore(var name: String = "", var logPrefix: String? = "", var url: 
         var bw: BufferedWriter? = null
         try {
             val path = context.externalCacheDir.absolutePath + "/" + logCachePath
-            val os = OutputStreamWriter(FileOutputStream(path, false), "UTF-8")
+            val os = OutputStreamWriter(GZIPOutputStream(FileOutputStream(path, false)), "UTF-8")
             bw = BufferedWriter(os)
             var text = originLogs.toString()
             if (text.length > maxBytes && maxBytes > 0) {
@@ -169,7 +170,7 @@ class LogDataStore(var name: String = "", var logPrefix: String? = "", var url: 
         var bw: BufferedWriter? = null
         try {
             val path = context.externalCacheDir.absolutePath + "/" + historyCachePath
-            val os = OutputStreamWriter(FileOutputStream(path, true), "UTF-8")
+            val os = OutputStreamWriter(GZIPOutputStream(FileOutputStream(path, true)), "UTF-8")
             bw = BufferedWriter(os)
             var text = originLogs.toString()
             if (text.isEmpty()) {

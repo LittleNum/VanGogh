@@ -6,7 +6,7 @@ data class Config(var suffix: String = "", var logInfo: String = "") {
     var mode: Mode = Mode.Default
     var orientation: Orientation = Orientation.Portrait
     var request: PermissionRequest? = null
-    var maxBytes = 5 * 1024 * 1024
+    var maxBytes = 15 * 1024 * 1024
     var url: String = ""
 
     enum class Mode(val mode: Int) {
